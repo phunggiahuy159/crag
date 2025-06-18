@@ -136,7 +136,7 @@ def index_huggingface_dataset(dataset_name, split="train"):
 
         print(f"Loaded dataset: {dataset_name}, Split: {split}, Number of documents: {len(docs)}")
         print(docs[0])
-        # docs = docs[0:10]
+        docs = docs[0:350000]
         # Convert to a list and slice (if needed)
   # Slicing the list to get only the first N documents
         # print(f"Total number of documents after slicing: {len(docs)}")
