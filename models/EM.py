@@ -23,7 +23,7 @@ class VietnameseSBERTEmbeddings(Embeddings):
         return self.model.encode(
             texts,
             convert_to_numpy=True,
-            batch_size=128,
+            batch_size=64,
             show_progress_bar=True,
             device=self.device
         )
