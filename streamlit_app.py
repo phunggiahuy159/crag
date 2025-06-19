@@ -1,288 +1,206 @@
+import gradio as gr
+import requests
+from models.LLM import llm
+from graph import workflow_compiler
+from langchain_community.utilities import SQLDatabase
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 
-# import sys
-# from models.LLM import llm
-# from tools.index_tool import indexer
-# from graph import workflow_compiler
-# print('djtttttt')
-# def generate_llm_response(input_text):
-#     ans = ""
-#     for token in llm.stream(input_text):
-#         ans += token.content
-#     print("\nLLM Response:\n")
-#     print(ans)
-
-# def generate_rag_response(app, input_text):
-#     ans = ""
-#     input_dict = {"question": str(input_text)}
-#     response = app.invoke(input_dict)
-
-#     for token in response["generation"]:
-#         ans += token
-#     print("\nRAG Response:\n")
-#     print(ans)
-
-#     print("\nSources:")
-#     for j, doc in enumerate(response["documents"]):
-#         s = str(doc.page_content).replace("\n", " ")
-#         doc_snippet = s if len(s) <= 100 else f"{s[:45]}...{s[-45:]}"
-#         print(f"{j+1}. Document: ({doc_snippet})")
-#         print(f"   Source: {doc.metadata['source']}")
-#         if "page" in doc.metadata:
-#             print(f"   Page: {int(doc.metadata['page']) + 1}")
-
-# def main():
-#     # if len(sys.argv) != 2:
-#     #     print("Usage: python run_rag.py path_to_pdf")
-#     #     sys.exit(1)
-
-#     # file_path = sys.argv[1]
+class RAGSystem:
+    def __init__(self):
+        self.app = None
+        self.setup_system()
     
-#     # try:
-#     #     # print(f"Indexing document: {file_path}")
-#     #     # indexer(file_path)
-#     app = workflow_compiler()
-#     #     print("Indexing completed.\n")
-#     # except Exception as e:
-#     #     print(f"Error indexing file: {e}")
-#     #     sys.exit(1)
-
-#     # Accept user input
-#     while True:
-#         try:
-#             query = input("\nEnter your query (or 'exit' to quit): ")
-#             if query.lower() in ['exit', 'quit']:
-#                 break
-#             generate_rag_response(app, query)
-#         except KeyboardInterrupt:
-#             print("\nExiting...")
-#             break
-
-# if __name__ == "__main__":
-#     main()
-
-# import sys
-# from datasets import load_dataset  # to load Hugging Face dataset
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain_community.vectorstores.faiss import FAISS
-# from langchain.schema import Document  # Import Document class
-# from models.EM import embedding
-
-# # Function to index the dataset
-# def index_huggingface_dataset(dataset_name, split="train"):
-#     try:
-#         # Load the dataset from Hugging Face
-#         dataset = load_dataset(dataset_name)
-#         print(len(dataset['train']))
-#         docs = dataset[split][0:1288679]
-#         print(len(docs))
-#         # print(docs)# Access the 'train' split (or another split)
-#         print(f"Loaded dataset: {dataset_name}, Split: {split}")
-        
-#         # Split the text in the dataset
-#         splits = []
-#         text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-#             chunk_size=1024, chunk_overlap=128
-#         )
-#         print('ok')
-        
-#         # Iterate over each document in the dataset and split the text
-#         for item in docs:
-#             text = item
-#             # print('dkm')  # Assuming the text is in the "text" field
-#             split_docs = text_splitter.split_text(text)  # Split the document into chunks
+    def setup_system(self):
+        """Initialize the RAG system with database and LLM"""
+        try:
+            # Initialize LLM
+            llm_instance = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash", 
+                google_api_key='AIzaSyCyXr2KjwW58Vm0bewJ_sGEau8C1WS_QNQ'
+            )
             
-#             # Convert each chunk into a Document object
-#             for doc in split_docs:
-#                 # You can add metadata if needed, e.g., doc_id or document index
-#                 document = Document(page_content=doc)
-#                 splits.append(document)  # Add the Document to the splits list
-        
-#         print(f"Total number of document chunks: {len(splits)}")
-        
-#         # Create embeddings for the chunks
-#         print("Creating embeddings for chunks...")
-#         vectorstore = FAISS.from_documents(splits, embedding)
-        
-#         # Save the vector store to local storage
-#         vectorstore.save_local("wiki_")
-#         print("Indexing completed and saved locally.")
-        
-#     except Exception as e:
-#         print(f"Error indexing dataset: {e}")
-#         sys.exit(1)
-
-# # If you're running from a command line
-# if __name__ == "__main__":
-#     if len(sys.argv) != 2:
-#         print("Usage: python index_huggingface.py <dataset_name>")
-#         sys.exit(1)
-
-#     dataset_name = sys.argv[1]  # Pass dataset name as a command-line argument
-#     index_huggingface_dataset(dataset_name)  # Index the dataset
-
-import sys
-from datasets import load_dataset  # to load Hugging Face dataset
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores.faiss import FAISS
-from langchain.schema import Document  # Import Document class
-from models.EM import embedding
-
-# Function to index the dataset
-def index_huggingface_dataset(dataset_name, split="train"):
-    try:
-        # Load the dataset from Hugging Face
-        dataset = load_dataset(dataset_name)
-        docs = dataset[split]  # Access the 'train' split (or another split)
-
-        print(f"Loaded dataset: {dataset_name}, Split: {split}, Number of documents: {len(docs)}")
-        print(docs[0])
-        docs = docs[0:350000]
-        # Convert to a list and slice (if needed)
-  # Slicing the list to get only the first N documents
-        # print(f"Total number of documents after slicing: {len(docs)}")
-        
-        # Split the text in the dataset
-        splits = []
-        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            chunk_size=1024, chunk_overlap=128
-        )
-        # print(docs)
-        
-        # Iterate over each document in the dataset and split the text
-# Iterate over each document in the dataset and split the text
-        for idx, item in enumerate(docs['text']):
-            # print(item)
-            if idx%5000==0:
-              print(idx)
-            # If the document is a string (not a dictionary), use it directly
-            if isinstance(item, str):
-                text = item
-                metadata = {'source': f"Document-{idx}"}
+            # Download and setup database
+            url = 'https://huggingface.co/datasets/phunghuy159/db_test/resolve/main/eng1.db'
+            response = requests.get(url)
+            
+            if response.status_code == 200:
+                with open("Chinook.db", "wb") as file:
+                    file.write(response.content)
+                print("Database downloaded successfully")
             else:
-                text = item.get("text", "")  # Modify this if the text is under a different key
-                metadata = {'source': f"Document-{idx}"}
-
-            if text:  # Check if there's text to split
-                split_docs = text_splitter.split_text(text)  # Split the document into chunks
-                
-                # Convert each chunk into a Document object
-                for doc in split_docs:
-                    document = Document(page_content=doc, metadata=metadata)  # Add metadata
-                    splits.append(document)  # Add the Document to the splits list
-
-        print(f"Total number of document chunks: {len(splits)}")
-        
-        # Create embeddings for the chunks
-        print("Creating embeddings for chunks...")
-        vectorstore = FAISS.from_documents(splits, embedding)
-        
-        # Save the vector store to local storage
-        vectorstore.save_local("wiki_600")  # Change this to a unique path if needed
-        print("Indexing completed and saved locally.")
-        
-    except Exception as e:
-        print(f"Error indexing dataset: {e}")
-        sys.exit(1)
-
-# If you're running from a command line
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python index_huggingface.py <dataset_name>")
-        sys.exit(1)
-
-    dataset_name = sys.argv[1]  # Pass dataset name as a command-line argument
-    index_huggingface_dataset(dataset_name)  # Index the dataset
-
-
-
-
-
-# import sys
-# from models.LLM import llm
-# from tools.index_tool import indexer
-# from graph import workflow_compiler
-# from langchain_community.utilities import SQLDatabase
-
-# print('djtttttt')
-# def generate_llm_response(input_text):
-#     ans = ""
-#     for token in llm.stream(input_text):
-#         ans += token.content
-#     print("\nLLM Response:\n")
-#     print(ans)
-
-# def generate_rag_response(app, input_text):
-#     ans = ""
-#     input_dict = {"question": str(input_text)}
-#     response = app.invoke(input_dict)
-
-#     for token in response["generation"]:
-#         ans += token
-#     print("\nRAG Response:\n")
-#     print(ans)
-
-#     print("\nSources:")
-#     for j, doc in enumerate(response["documents"]):
-#         s = str(doc.page_content).replace("\n", " ")
-#         doc_snippet = s if len(s) <= 100 else f"{s[:45]}...{s[-45:]}"
-#         print(f"{j+1}. Document: ({doc_snippet})")
-#         print(f"   Source: {doc.metadata['source']}")
-#         if "page" in doc.metadata:
-#             print(f"   Page: {int(doc.metadata['page']) + 1}")
-
-# def main():
-#     # if len(sys.argv) != 2:
-#     #     print("Usage: python run_rag.py path_to_pdf")
-#     #     sys.exit(1)
-
-#     # file_path = sys.argv[1]
+                raise Exception(f"Failed to download database. Status code: {response.status_code}")
+            
+            # Setup database connection
+            db_uri = "sqlite:///Chinook.db"
+            db = SQLDatabase.from_uri(db_uri)
+            print(f"Available tables: {db.get_usable_table_names()}")
+            
+            # Initialize workflow
+            self.app = workflow_compiler(db, llm_instance)
+            return "✅ RAG System initialized successfully!"
+            
+        except Exception as e:
+            error_msg = f"❌ Error initializing system: {str(e)}"
+            print(error_msg)
+            return error_msg
     
-#     # try:
-#     # print(f"Indexing document: {file_path}")
-#     # indexer(file_path)
-#     from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
+    def generate_response(self, query):
+        """Generate RAG response for the given query"""
+        if not self.app:
+            return "❌ System not initialized. Please restart the application.", ""
+        
+        if not query.strip():
+            return "Please enter a valid query.", ""
+        
+        try:
+            # Prepare input
+            input_dict = {"question": str(query)}
+            response = self.app.invoke(input_dict)
+            
+            # Extract response text
+            answer = ""
+            for token in response["generation"]:
+                answer += token
+            
+            # Format sources
+            sources_info = ""
+            if "documents" in response and response["documents"]:
+                sources_info = "**Sources:**\n"
+                for j, doc in enumerate(response["documents"]):
+                    s = str(doc.page_content).replace("\n", " ")
+                    doc_snippet = s if len(s) <= 100 else f"{s[:45]}...{s[-45:]}"
+                    sources_info += f"{j+1}. **Document:** {doc_snippet}\n"
+                    sources_info += f"   **Source:** {doc.metadata['source']}\n"
+                    if "page" in doc.metadata:
+                        sources_info += f"   **Page:** {int(doc.metadata['page']) + 1}\n"
+                    sources_info += "\n"
+            else:
+                sources_info = "No sources available for this response."
+            
+            return answer, sources_info
+            
+        except Exception as e:
+            error_msg = f"❌ Error generating response: {str(e)}"
+            return error_msg, ""
 
-#     llm = ChatGoogleGenerativeAI(
-#         model="gemini-2.0-flash", google_api_key='AIzaSyCyXr2KjwW58Vm0bewJ_sGEau8C1WS_QNQ'
-#     )
-#     # url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db"
-#     url = 'https://huggingface.co/datasets/phunghuy159/db_test/resolve/main/eng1.db'
-#     import requests
+# Initialize RAG system
+rag_system = RAGSystem()
 
-#     response = requests.get(url)
+def chat_interface(message, history):
+    """Chat interface function for Gradio"""
+    answer, sources = rag_system.generate_response(message)
+    
+    # Combine answer and sources for display
+    full_response = answer
+    if sources:
+        full_response += f"\n\n---\n\n{sources}"
+    
+    return full_response
 
-#     if response.status_code == 200:
-#         # Open a local file in binary write mode
-#         with open("Chinook.db", "wb") as file:
-#             print(response.content)
-#             # Write the content of the response (the file) to the local file
-#             file.write(response.content)
-#         print("File downloaded and saved as Chinook.db")
-#     else:
-#         print(f"Failed to download the file. Status code: {response.status_code}")
-#     db_uri = "sqlite:///Chinook.db"
-#     # db_uri = "sqlite:///eng1.db"
+def clear_chat():
+    """Clear the chat history"""
+    return []
 
-#     db = SQLDatabase.from_uri(db_uri)
-#     print(f"Available tables: {db.get_usable_table_names()}")
+# Create Gradio interface
+with gr.Blocks(
+    title="RAG Question Answering System",
+    theme=gr.themes.Soft(),
+    css="""
+    .gradio-container {
+        max-width: 1200px !important;
+        margin: auto;
+    }
+    .chat-container {
+        height: 600px;
+    }
+    """
+) as demo:
+    
+    gr.Markdown(
+        """
+        # 🤖 RAG Question Answering System
+        
+        Ask questions about your database and get intelligent responses powered by RAG (Retrieval-Augmented Generation).
+        The system uses a SQLite database and Gemini 2.0 Flash for generating contextual answers.
+        """
+    )
+    
+    with gr.Row():
+        with gr.Column(scale=4):
+            chatbot = gr.Chatbot(
+                label="Chat History",
+                height=500,
+                show_copy_button=True,
+                bubble_full_width=False
+            )
+            
+            with gr.Row():
+                msg = gr.Textbox(
+                    placeholder="Enter your question here...",
+                    label="Your Question",
+                    lines=2,
+                    max_lines=5,
+                    scale=4
+                )
+                submit_btn = gr.Button("Send", variant="primary", scale=1)
+            
+            with gr.Row():
+                clear_btn = gr.Button("Clear Chat", variant="secondary")
+        
+        with gr.Column(scale=1):
+            gr.Markdown(
+                """
+                ### 💡 Tips:
+                - Ask specific questions about the database
+                - You can ask about relationships between data
+                - Try questions like:
+                  - "What tables are available?"
+                  - "Show me customer information"
+                  - "What are the top selling products?"
+                
+                ### 🔧 System Status:
+                - Database: ✅ Connected
+                - LLM: ✅ Gemini 2.0 Flash
+                - RAG: ✅ Active
+                """
+            )
+    
+    # Event handlers
+    def respond(message, chat_history):
+        if not message.strip():
+            return chat_history, ""
+        
+        # Get response from RAG system
+        bot_response = chat_interface(message, chat_history)
+        
+        # Update chat history
+        chat_history.append((message, bot_response))
+        return chat_history, ""
+    
+    # Button and enter key events
+    submit_btn.click(
+        respond,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, msg]
+    )
+    
+    msg.submit(
+        respond,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, msg]
+    )
+    
+    clear_btn.click(
+        lambda: ([], ""),
+        outputs=[chatbot, msg]
+    )
 
-#     # db_uri = '/content/crag/Chinook.db'
-#     app = workflow_compiler(db,llm)
-#     print("Indexing completed.\n")
-#     # except Exception as e:
-#     #     print(f"Error indexing file: {e}")
-#     #     sys.exit(1)
-
-#     # Accept user input
-#     while True:
-#         try:
-#             query = input("\nEnter your query (or 'exit' to quit): ")
-#             if query.lower() in ['exit', 'quit']:
-#                 break
-#             generate_rag_response(app, query)
-#         except KeyboardInterrupt:
-#             print("\nExiting...")
-#             break
-
-# if __name__ == "__main__":
-#     main()
+# Launch the interface
+if __name__ == "__main__":
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=True,
+        show_error=True,
+        debug=True
+    )
