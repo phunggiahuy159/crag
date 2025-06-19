@@ -195,6 +195,8 @@ if __name__ == "__main__":
 
 
 
+
+
 # import sys
 # from models.LLM import llm
 # from tools.index_tool import indexer
@@ -229,47 +231,47 @@ if __name__ == "__main__":
 #             print(f"   Page: {int(doc.metadata['page']) + 1}")
 
 # def main():
-#     if len(sys.argv) != 2:
-#         print("Usage: python run_rag.py path_to_pdf")
-#         sys.exit(1)
+#     # if len(sys.argv) != 2:
+#     #     print("Usage: python run_rag.py path_to_pdf")
+#     #     sys.exit(1)
 
-#     file_path = sys.argv[1]
+#     # file_path = sys.argv[1]
     
-#     try:
-#         print(f"Indexing document: {file_path}")
-#         indexer(file_path)
-#         from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
+#     # try:
+#     # print(f"Indexing document: {file_path}")
+#     # indexer(file_path)
+#     from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 
-#         llm = ChatGoogleGenerativeAI(
-#             model="gemini-2.0-flash", google_api_key='AIzaSyCyXr2KjwW58Vm0bewJ_sGEau8C1WS_QNQ'
-#         )
-#         # url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db"
-#         url = 'https://huggingface.co/datasets/phunghuy159/db_test/resolve/main/eng1.db'
-#         import requests
+#     llm = ChatGoogleGenerativeAI(
+#         model="gemini-2.0-flash", google_api_key='AIzaSyCyXr2KjwW58Vm0bewJ_sGEau8C1WS_QNQ'
+#     )
+#     # url = "https://storage.googleapis.com/benchmarks-artifacts/chinook/Chinook.db"
+#     url = 'https://huggingface.co/datasets/phunghuy159/db_test/resolve/main/eng1.db'
+#     import requests
 
-#         response = requests.get(url)
+#     response = requests.get(url)
 
-#         if response.status_code == 200:
-#             # Open a local file in binary write mode
-#             with open("Chinook.db", "wb") as file:
-#                 print(response.content)
-#                 # Write the content of the response (the file) to the local file
-#                 file.write(response.content)
-#             print("File downloaded and saved as Chinook.db")
-#         else:
-#             print(f"Failed to download the file. Status code: {response.status_code}")
-#         db_uri = "sqlite:///Chinook.db"
-#         # db_uri = "sqlite:///eng1.db"
+#     if response.status_code == 200:
+#         # Open a local file in binary write mode
+#         with open("Chinook.db", "wb") as file:
+#             print(response.content)
+#             # Write the content of the response (the file) to the local file
+#             file.write(response.content)
+#         print("File downloaded and saved as Chinook.db")
+#     else:
+#         print(f"Failed to download the file. Status code: {response.status_code}")
+#     db_uri = "sqlite:///Chinook.db"
+#     # db_uri = "sqlite:///eng1.db"
 
-#         db = SQLDatabase.from_uri(db_uri)
-#         print(f"Available tables: {db.get_usable_table_names()}")
+#     db = SQLDatabase.from_uri(db_uri)
+#     print(f"Available tables: {db.get_usable_table_names()}")
 
-#         # db_uri = '/content/crag/Chinook.db'
-#         app = workflow_compiler(db,llm)
-#         print("Indexing completed.\n")
-#     except Exception as e:
-#         print(f"Error indexing file: {e}")
-#         sys.exit(1)
+#     # db_uri = '/content/crag/Chinook.db'
+#     app = workflow_compiler(db,llm)
+#     print("Indexing completed.\n")
+#     # except Exception as e:
+#     #     print(f"Error indexing file: {e}")
+#     #     sys.exit(1)
 
 #     # Accept user input
 #     while True:
